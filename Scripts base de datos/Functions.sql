@@ -1,3 +1,6 @@
+USE BD2
+GO
+
 CREATE FUNCTION dbo.ConcatenatePlatforms(@game_id INT)
 RETURNS NVARCHAR(MAX)
 AS
@@ -12,7 +15,7 @@ BEGIN
 
     RETURN @Platforms
 END
-
+GO
 
 CREATE FUNCTION dbo.ConcatenateLenguages(@game_id INT)
 RETURNS NVARCHAR(MAX)
@@ -28,7 +31,7 @@ BEGIN
 
     RETURN @Languages
 END
-
+GO
 
 CREATE FUNCTION dbo.CountLanguages(@game_id INT)
 RETURNS INT
@@ -44,3 +47,34 @@ BEGIN
 
     RETURN @Count
 END
+GO
+
+CREATE FUNCTION dbo.ConcatenateFranchises(@game_id INT)
+RETURNS NVARCHAR(MAX)
+AS
+BEGIN
+    DECLARE @Franchises NVARCHAR(MAX)
+
+    SELECT @Franchises = COALESCE(@Franchises + ' / ', '') + f.name
+    FROM franchise_member fm 
+	JOIN franchise f on fm.franchise_id  = f.franchise_id  
+	WHERE fm.game_id  = @game_id
+
+    RETURN @Franchises
+END
+GO
+
+CREATE FUNCTION dbo.ConcatenateCompanies(@game_id INT)
+RETURNS NVARCHAR(MAX)
+AS
+BEGIN
+    DECLARE @Companies NVARCHAR(MAX)
+
+    SELECT @Companies = COALESCE(@Companies + ' / ', '') + c.name
+    FROM involved_companies ic 
+	JOIN company c on ic.company_id  = c.company_id  
+	WHERE ic.game_id  = @game_id
+
+    RETURN @Companies
+END
+GO
