@@ -122,3 +122,68 @@ BEGIN
 	GROUP BY g.game_id, g.name, g.rating, g.storyline, g.summary;
 END
 GO
+
+CREATE PROCEDURE dbo.GetGameInfo(
+@game_id INT,
+@name VARCHAR(MAX)
+)
+AS
+BEGIN
+	DECLARE @id INT;
+	IF @game_id IS NULL AND @name IS NULL
+	BEGIN
+		SELECT 'INGRESE POR LO MENOS EL ID O NOMBRE' AS 'ERROR';
+		RETURN;
+	END
+	IF @name IS NOT NULL
+	BEGIN
+		SELECT @id = g.game_id FROM game g WHERE g.name LIKE CONCAT('%',@name,'%')
+	END
+	ELSE 
+		SET @id = @game_id
+SELECT
+	g.*,
+	dbo.GetAlternatives(@id) alternate_titles,
+	dbo.GetModes(@id) modes,
+	dbo.GetGenres(@id) genres,
+	dbo.GetEngine(@id) engine,
+	dbo.GetFranchise(@id) franchise,
+	dbo.GetPerspective(@id) perspectives,
+	p.*,
+	c.*
+FROM
+	game g
+JOIN dbo.GetCompanyInfo(@id) c ON
+	1 = 1
+JOIN dbo.GetPlatforms(@id) p ON
+	1 = 1
+WHERE
+	g.game_id = @id;
+END;
+GO
+
+-- Consulta 5
+-- Consulta que muestre el top los juegos por genero, ordenados por rating
+DROP PROCEDURE IF EXISTS dbo.Consulta5;
+CREATE PROCEDURE dbo.Consulta5(
+	@genre_in VARCHAR(MAX)
+)
+AS
+BEGIN
+	
+	DECLARE @id INT ;
+    SELECT @id = g3.genre_id FROM genre g3 WHERE g3.name LIKE CONCAT('%',@genre_in,'%')
+    IF @id IS NULL 
+    BEGIN	
+    	SELECT 'Genero no encontrado' AS 'ERROR'
+    	RETURN
+    END
+	SELECT g.name,r.[date],g.rating , dbo.ConcatenatePlatforms(g.game_id)  platform  FROM  game g 
+	JOIN used_genre ug ON g.game_id=ug.game_id 
+	JOIN genre g2 ON ug.genre_id=g2.genre_id
+	JOIN [release] r ON g.game_id=r.game_id 
+	WHERE g2.genre_id = @id 
+	GROUP BY g.game_id,g.name,r.[date],g.rating
+	ORDER BY g.rating DESC ;
+END;
+GO
